@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panel de Administración</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.5em;
+      text-align: left;
+    }
+    tr:hover {
+      background-color: #f2f2f2;
+    }
+    button {
+      padding: 0.3em 0.6em;
+      margin-right: 0.3em;
+      cursor: pointer;
+    }
+    .edit-form {
+      display: none;
+      margin-top: 1em;
+      border: 1px solid #ccc;
+      padding: 1em;
+      background: #fafafa;
+    }
+    .edit-form input, .edit-form select {
+      padding: 0.3em;
+      margin-bottom: 0.6em;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Panel de Administración - Propiedades</h1>
+    <table id="tabla-propiedades">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Ubicación</th>
+          <th>Precio</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="edit-form" id="edit-form">
+      <h2>Editar Propiedad</h2>
+      <form id="form-editar">
+        <input type="hidden" id="edit-id" />
+        <label for="edit-nombre">Nombre:</label>
+        <input type="text" id="edit-nombre" required />
+
+        <label for="edit-tipo">Tipo:</label>
+        <select id="edit-tipo" required>
+          <option value="departamento">Departamento</option>
+          <option value="casa">Casa</option>
+          <option value="salon">Salón de eventos</option>
+        </select>
+
+        <label for="edit-imagen">URL Imagen:</label>
+        <input type="url" id="edit-imagen" required />
+
+        <label for="edit-ubicacion">Ubicación:</label>
+        <input type="text" id="edit-ubicacion" required />
+
+        <label for="edit-precio">Precio ($):</label>
+        <input type="number" id="edit-precio" required />
+
+        <button type="submit">Guardar Cambios</button>
+        <button type="button" id="cancelar-edicion">Cancelar</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    const tbody = document.querySelector("#tabla-propiedades tbody");
+    const editForm = document.getElementById("edit-form");
+    const formEditar = document.getElementById("form-editar");
+
+    // Cargar propiedades
+    async function cargarPropiedades() {
+      tbody.innerHTML = "";
+      try {
+        const res = await fetch("http://localhost:3000/api/propiedades");
+        const propiedades = await res.json();
+
+        propiedades.forEach(p => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${p.id}</td>
+            <td>${p.nombre}</td>
+            <td>${p.tipo}</td>
+            <td>${p.ubicacion}</td>
+            <td>$${p.precio}</td>
+            <td>
+              <button onclick="mostrarEdicion(${p.id})">Editar</button>
+              <button onclick="eliminarPropiedad(${p.id})">Eliminar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch {
+        tbody.innerHTML = "<tr><td colspan='6'>Error al cargar propiedades</td></tr>";
+      }
+    }
+
+    // Mostrar formulario con datos para editar
+    async function mostrarEdicion(id) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/propiedades/${id}`);
+        if (!res.ok) throw new Error("No encontrado");
+        const p = await res.json();
+
+        document.getElementById("edit-id").value = p.id;
+        document.getElementById("edit-nombre").value = p.nombre;
+        document.getElementById("edit-tipo").value = p.tipo;
+        document.getElementById("edit-imagen").value = p.imagen;
+        document.getElementById("edit-ubicacion").value = p.ubicacion;
+        document.getElementById("edit-precio").value = p.precio;
+
+        editForm.style.display = "block";
+        window.scrollTo(0, document.body.scrollHeight);
+      } catch {
+        alert("Error al cargar datos para editar");
+      }
+    }
+
+    // Cancelar edición
+    document.getElementById("cancelar-edicion").addEventListener("click", () => {
+      editForm.style.display = "none";
+    });
+
+    // Guardar cambios
+    formEditar.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById("edit-id").value;
+      const datosEditados = {
+        nombre: document.getElementById("edit-nombre").value.trim(),
+        tipo: document.getElementById("edit-tipo").value,
+        imagen: document.getElementById("edit-imagen").value.trim(),
+        ubicacion: document.getElementById("edit-ubicacion").value.trim(),
+        precio: parseFloat(document.getElementById("edit-precio").value),
+      };
+
+      try {
+        const res = await fetch(`http://localhost:3000/api/propiedades/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datosEditados)
+        });
+
+        if (res.ok) {
+          alert("Propiedad actualizada correctamente");
+          editForm.style.display = "none";
+          cargarPropiedades();
+        } else {
+          alert("Error al actualizar propiedad");
+        }
+      } catch {
+        alert("Error en la conexión");
+      }
+    });
+
+    // Eliminar propiedad
+    async function eliminarPropiedad(id) {
+      if (!confirm("¿Estás seguro de eliminar esta propiedad?")) return;
+
+      try {
+        const res = await fetch(`http://localhost:3000/api/propiedades/${id}`, {
+          method: "DELETE"
+        });
+
+        if (res.ok) {
+          alert("Propiedad eliminada");
+          cargarPropiedades();
+        } else {
+          alert("Error al eliminar propiedad");
+        }
+      } catch {
+        alert("Error en la conexión");
+      }
+    }
+
+    // Inicializar tabla
+    cargarPropiedades();
+  </script>
+</body>
+</html>

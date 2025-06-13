@@ -1,0 +1,47 @@
+<!-- frontend/reserva.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reservar propiedad</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Reservar propiedad</h1>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="propiedades.html">Propiedades</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="detalle-container">
+      <h2 id="reserva-nombre"></h2>
+      <form id="form-reserva">
+        <label for="fecha-inicio">Fecha de inicio:</label>
+        <input type="date" id="fecha-inicio" name="fecha_inicio" required><br><br>
+
+        <label for="fecha-fin">Fecha de fin:</label>
+        <input type="date" id="fecha-fin" name="fecha_fin" required><br><br>
+
+        <label for="nombre">Tu nombre:</label>
+        <input type="text" id="nombre" name="nombre" required><br><br>
+
+        <label for="email">Tu email:</label>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <button type="submit" class="boton">Confirmar reserva</button>
+      </form>
+      <div id="mensaje-reserva" style="margin-top: 1em;"></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Reservas Online</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
